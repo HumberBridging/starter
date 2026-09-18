@@ -1,0 +1,22 @@
+@B = https://localhost:7182
+
+### Random: succeeds about 30% of the time
+GET {{B}}/api/demo/unstable
+
+### Force each outcome
+GET {{B}}/api/demo/unstable?mode=ok
+
+###
+GET {{B}}/api/demo/unstable?mode=notfound
+
+###
+GET {{B}}/api/demo/unstable?mode=unavailable
+
+### Unhandled exception → ProblemDetails with a traceId
+GET {{B}}/api/demo/unstable?mode=throw
+
+### Slow response (timeouts)
+GET {{B}}/api/demo/slow?ms=3000
+
+### Non-idempotent call
+POST {{B}}/api/demo/orders?mode=ok

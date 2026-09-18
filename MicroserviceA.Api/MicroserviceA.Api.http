@@ -1,0 +1,16 @@
+@A = https://localhost:7170
+
+### Random: A relays whatever B finally answers
+GET {{A}}/api/external-service
+
+### Force an outcome in B
+GET {{A}}/api/external-service?mode=unavailable
+
+### 404 is not transient: never retried
+GET {{A}}/api/external-service?mode=notfound
+
+### Slow B: attempt timeout is 2 s (from ch04)
+GET {{A}}/api/external-service/slow?ms=3000
+
+### POST is not retried (from ch04)
+POST {{A}}/api/external-service/orders?mode=unavailable
