@@ -1,7 +1,8 @@
-using System.ComponentModel.DataAnnotations;
 using MicroserviceB.Api.Chaos;
+using MicroserviceB.Api.Telemetry;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.ComponentModel.DataAnnotations;
 
 namespace MicroserviceB.Api.Controllers
 {
@@ -83,6 +84,22 @@ namespace MicroserviceB.Api.Controllers
             // Everything below is a simulated failure
             _logger.LogWarning("Simulated failure occurred: {Outcome}", outcome);
 
+            //Needs error type
+            var errorType = outcome switch
+            {
+                "notfound" => "404",
+                "error" => "500",
+                "unavailable" => "503",
+                _ => "exception"
+            };
+
+            // A custom span (shows up in the trace waterfall) and a custom metric (counts failures by type)
+            using var activity = DemoTelemetry.Source.StartActivity("SimulateFailure");
+            activity?.SetTag("error.type", errorType);
+            activity?.SetTag("demo.mode", mode);
+
+            DemoTelemetry.Failures.Add(1, new KeyValuePair<string, object?>("error.type", errorType));
+
             return outcome switch
             {
                 "notfound" => NotFound("Simulated 404 Not Found"),
@@ -91,6 +108,8 @@ namespace MicroserviceB.Api.Controllers
                 // Mimic an unhandled exception to trigger the global exception handler
                 _ => throw new NotImplementedException("Simulated unhandled exception")
             };
+
+
         }
 
         // Of the failures: 1 in 5 is a 404, 2 in 5 throw, 1 in 5 is a 500, 1 in 5 is a 503
