@@ -1,6 +1,7 @@
 using MicroserviceA.Api.Clients;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using OpenTelemetry.Resources;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace MicroserviceA.Api
 {
@@ -29,7 +30,14 @@ namespace MicroserviceA.Api
                 ?? throw new InvalidOperationException("Configuration value 'Services:MicroserviceB' is missing.");
 
             builder.Services.AddHttpClient<MicroserviceBClient>(client =>
-                    client.BaseAddress = new Uri(microserviceBAddress));
+                    client.BaseAddress = new Uri(microserviceBAddress))
+                .AddStandardResilienceHandler(options =>
+                {
+                    options.Retry.Delay = TimeSpan.FromMilliseconds(500);
+                    options.Retry.DisableForUnsafeHttpMethods();
+                    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(2);
+                });
+
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
