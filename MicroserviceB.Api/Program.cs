@@ -1,6 +1,7 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using MicroserviceB.Api.Chaos;
 using MicroserviceB.Api.Middleware;
+using MicroserviceB.Api.Telemetry;
 using OpenTelemetry.Resources;
 
 namespace MicroserviceB.Api
@@ -17,8 +18,9 @@ namespace MicroserviceB.Api
             var otel = builder.Services.AddOpenTelemetry()
                                 .ConfigureResource(resource => resource.AddService(
                                  serviceName: "MicroserviceB.Api",
-                                 serviceNamespace: telemetryNamespace)
-                                );
+                                 serviceNamespace: telemetryNamespace))
+                                .WithTracing(tracing => tracing.AddSource(DemoTelemetry.Name))
+                                .WithMetrics(metrics => metrics.AddMeter(DemoTelemetry.Name)); ;
 
             if (!string.IsNullOrEmpty(builder.Configuration["AzureMonitor:ConnectionString"]))
             {
